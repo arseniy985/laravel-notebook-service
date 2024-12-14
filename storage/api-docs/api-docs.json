@@ -1,0 +1,421 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Laravel Notes API Documentation",
+        "description": "API documentation for Notes Service",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/v1/notebook": {
+            "get": {
+                "tags": [
+                    "Заметки"
+                ],
+                "summary": "Получить список заметок",
+                "description": "Возвращает список заметок с пагинацией. Если параметр page не указан, возвращает все заметки.",
+                "operationId": "2952f131be74c40e747dbcf62896aad5",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Номер страницы (необязательно). Если не указан, возвращает все заметки без пагинации",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Количество элементов на странице (необязательно, по умолчанию: 15)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешная операция",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Note"
+                                            }
+                                        },
+                                        "links": {
+                                            "properties": {
+                                                "first": {
+                                                    "description": "Ссылка на первую страницу",
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/v1/notebook?page=1"
+                                                },
+                                                "last": {
+                                                    "description": "Ссылка на последнюю страницу",
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/v1/notebook?page=3"
+                                                },
+                                                "prev": {
+                                                    "description": "Ссылка на предыдущую страницу",
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "next": {
+                                                    "description": "Ссылка на следующую страницу",
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/v1/notebook?page=2"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "description": "Текущая страница",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "from": {
+                                                    "description": "Номер первой записи на странице",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "description": "Номер последней страницы",
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "path": {
+                                                    "description": "Базовый URL",
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/api/v1/notebook"
+                                                },
+                                                "per_page": {
+                                                    "description": "Количество записей на странице",
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "to": {
+                                                    "description": "Номер последней записи на странице",
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total": {
+                                                    "description": "Общее количество записей",
+                                                    "type": "integer",
+                                                    "example": 28
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Заметки"
+                ],
+                "summary": "Создать новую заметку",
+                "operationId": "8c97c05f2b577008856fdea7eb363071",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "full_name",
+                                    "company",
+                                    "phone",
+                                    "email",
+                                    "birth_date"
+                                ],
+                                "properties": {
+                                    "full_name": {
+                                        "description": "ФИО",
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "company": {
+                                        "description": "Название компании",
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "description": "Номер телефона",
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "description": "Email адрес",
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "birth_date": {
+                                        "description": "Дата рождения",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "photo": {
+                                        "description": "Фотография (опционально)",
+                                        "type": "file",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Заметка успешно создана",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Note"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Ошибка валидации"
+                    }
+                }
+            }
+        },
+        "/api/v1/notebook/{id}": {
+            "get": {
+                "tags": [
+                    "Заметки"
+                ],
+                "summary": "Получить заметку по ID",
+                "operationId": "ddcbe9f0f06cc534919ce97ba285d68f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID заметки",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешная операция",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Note"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Заметка не найдена"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Заметки"
+                ],
+                "summary": "Обновить заметку",
+                "operationId": "fcb101379dc92f8039c41233b059b905",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID заметки",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "full_name": {
+                                        "description": "ФИО",
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "company": {
+                                        "description": "Название компании",
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "description": "Номер телефона",
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "description": "Email адрес",
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    },
+                                    "birth_date": {
+                                        "description": "Дата рождения",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "photo": {
+                                        "description": "Фотография (опционально)",
+                                        "type": "file",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Заметка успешно обновлена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Note"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Заметка не найдена"
+                    },
+                    "422": {
+                        "description": "Ошибка валидации"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Заметки"
+                ],
+                "summary": "Удалить заметку",
+                "operationId": "179faa4bad13482172e9149c81d4070e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID заметки",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Заметка успешно удалена"
+                    },
+                    "404": {
+                        "description": "Заметка не найдена"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Note": {
+                "required": [
+                    "full_name",
+                    "company",
+                    "phone",
+                    "email",
+                    "birth_date"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "full_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "company": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "phone": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "birth_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "photo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Заметки",
+            "description": "Заметки"
+        }
+    ]
+}

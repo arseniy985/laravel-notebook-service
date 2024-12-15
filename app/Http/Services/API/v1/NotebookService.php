@@ -19,8 +19,8 @@ class NotebookService implements NotebookServiceInterface
     public function getAllNotes(): AnonymousResourceCollection
     {
         return Cache::remember(
-            self::CACHE_PREFIX . '_all_notes', 
-            self::CACHE_TTL, 
+            self::CACHE_PREFIX . '_all_notes',
+            self::CACHE_TTL,
             fn() => NotebookResource::collection(Note::all())
         );
     }
@@ -38,8 +38,8 @@ class NotebookService implements NotebookServiceInterface
         $this->addPaginatedKey($cacheKey);
 
         return Cache::remember(
-            $cacheKey, 
-            self::CACHE_TTL, 
+            $cacheKey,
+            self::CACHE_TTL,
             fn() => NotebookResource::collection(Note::paginate($per_page))
         );
     }
@@ -49,8 +49,8 @@ class NotebookService implements NotebookServiceInterface
         $cacheKey = self::CACHE_PREFIX . "_note_{$id}";
 
         return Cache::remember(
-            $cacheKey, 
-            self::CACHE_TTL, 
+            $cacheKey,
+            self::CACHE_TTL,
             fn() => new NotebookResource(Note::findOrFail($id))
         );
     }
@@ -90,7 +90,7 @@ class NotebookService implements NotebookServiceInterface
     public function destroyNote(int $id): void
     {
         $note = Note::findOrFail($id);
-        
+
         if ($note->photo) {
             $this->deleteNotePhoto($note->photo);
         }
@@ -109,7 +109,7 @@ class NotebookService implements NotebookServiceInterface
         );
 
         $path = 'notebook-photos/' . $filename;
-        
+
         if (!$photo->move(storage_path('app/public/notebook-photos'), $filename)) {
             return false;
         }
@@ -134,6 +134,7 @@ class NotebookService implements NotebookServiceInterface
         Cache::forget(self::CACHE_KEYS_KEY);
     }
 
+
     private function addPaginatedKey(string $cacheKey): void
     {
         $keys = Cache::get(self::CACHE_KEYS_KEY, []);
@@ -148,7 +149,7 @@ class NotebookService implements NotebookServiceInterface
         if ($id !== null) {
             Cache::forget(self::CACHE_PREFIX . "_note_{$id}");
         }
-        
+
         Cache::forget(self::CACHE_PREFIX . '_all_notes');
         $this->clearPaginatedCache();
     }

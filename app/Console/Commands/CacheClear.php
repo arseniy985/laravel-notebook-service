@@ -12,7 +12,7 @@ class CacheClear extends Command
      *
      * @var string
      */
-    protected $signature = 'cache:clear';
+    protected $signature = 'cache-clear';
 
     /**
      * The console command description.

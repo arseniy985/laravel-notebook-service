@@ -3,16 +3,13 @@
 namespace App\Http\Controllers\API\v1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Interfaces\API\v1\NotebookServiceInterface;
 use App\Http\Requests\API\v1\StoreNoteRequest;
 use App\Http\Requests\API\v1\UpdateNoteRequest;
 use App\Http\Resources\v1\NotebookResource;
-use App\Models\Note;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Ramsey\Uuid\Nonstandard\Uuid;
 
 /**
  * @OA\Info(
@@ -23,6 +20,11 @@ use Ramsey\Uuid\Nonstandard\Uuid;
  */
 class NotebookController extends Controller
 {
+    public function __construct(
+        private readonly NotebookServiceInterface $notebookService
+    )
+    {}
+
     /**
      * @OA\Get(
      *     path="/api/v1/notebook",
@@ -82,11 +84,9 @@ class NotebookController extends Controller
      */
     public function index(Request $req): AnonymousResourceCollection
     {
-        return NotebookResource::collection(
-            $req->query('page') ?
-                Note::paginate($req->query('per_page')) :
-                Note::all()
-        );
+        return $req->query('page') ?
+                $this->notebookService->getPaginatedNotes($req->query('per_page')) :
+                $this->notebookService->getAllNotes();
     }
 
     /**
@@ -124,15 +124,8 @@ class NotebookController extends Controller
      */
     public function store(StoreNoteRequest $req): NotebookResource
     {
-        $data = $req->validated();
-        if ($req->hasFile('photo')) {
-            $photo = $req->file('photo');
-            $data['photo'] = $this->saveNotePhoto($photo);
-        }
-
-        return new NotebookResource(
-            Note::create($data)
-        );
+        return $this->notebookService
+            ->storeNote($req->validated());
     }
 
     /**
@@ -162,9 +155,7 @@ class NotebookController extends Controller
      */
     public function show(Request $req): NotebookResource
     {
-        return new NotebookResource(
-            Note::findOrFail($req->route('id'))
-        );
+        return $this->notebookService->getNote($req->route('id'));
     }
 
     /**
@@ -212,21 +203,8 @@ class NotebookController extends Controller
      */
     public function update(UpdateNoteRequest $req): NotebookResource
     {
-        $note = Note::findOrFail($req->route('id'));
-        $data = $req->validated();
-
-        if ($req->hasFile('photo')) {
-            $photo = $req->file('photo');
-            $data['photo'] = $this->saveNotePhoto($photo);
-            if ($note->photo) {
-                $this->deleteNotePhoto($note->photo);
-            }
-        }
-
-        $note->update($data);
-
-        return new NotebookResource(
-            $note->fresh()
+        return $this->notebookService->updateNote(
+            $req->validated(), $req->route('id')
         );
     }
 
@@ -254,46 +232,9 @@ class NotebookController extends Controller
      */
     public function destroy(Request $req): Response
     {
-        $note = Note::findOrFail($req->route('id'));
-        if ($note->photo) {
-            $this->deleteNotePhoto($note->photo);
-        }
-
-        $note->delete();
+        $this->notebookService
+            ->destroyNote($req->route('id'));
 
         return response()->noContent();
-    }
-
-    /**
-     * Save uploaded notebook photo
-     *
-     * @param UploadedFile $photo Uploaded photo file
-     * @return false|string Path to saved photo or false on failure
-     */
-    private function saveNotePhoto(UploadedFile $photo): false|string
-    {
-
-        $filename = date('Y-m-d-H-i-s') . '-' . 
-            Uuid::uuid4()->toString() . '.' . 
-            $photo->getClientOriginalExtension();
-        if (!$photo->move(storage_path('app/public/notebook-photos'), $filename)) {
-            return false;
-        }
-        
-        return 'notebook-photos/' . $filename;
-    }
-
-    /**
-     * Delete notebook photo
-     * 
-     * @param string $photoPath Path to photo file
-     */
-    private function deleteNotePhoto(string $photoPath): void
-    {
-        $fullPath = storage_path('app/public/' . $photoPath);
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
-        }
-        
     }
 }

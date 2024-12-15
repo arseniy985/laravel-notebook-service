@@ -85,7 +85,7 @@ class NotebookController extends Controller
     public function index(Request $req): AnonymousResourceCollection
     {
         return $req->query('page') ?
-                $this->notebookService->getPaginatedNotes($req->query('per_page')) :
+                $this->notebookService->getPaginatedNotes($req->query('per_page', 15)) :
                 $this->notebookService->getAllNotes();
     }
 

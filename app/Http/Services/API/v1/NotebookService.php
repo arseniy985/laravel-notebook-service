@@ -7,30 +7,42 @@ use App\Http\Resources\v1\NotebookResource;
 use App\Models\Note;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Ramsey\Uuid\Nonstandard\Uuid;
 
 class NotebookService implements NotebookServiceInterface
 {
     public function getAllNotes(): AnonymousResourceCollection
     {
-        return NotebookResource::collection(
-            Note::all()
-        );
+        return Cache::remember('notebook_all_notes', 3600, function () {
+            return NotebookResource::collection(
+                Note::all()
+            );
+        });
     }
 
     public function getPaginatedNotes(int $per_page): AnonymousResourceCollection
     {
-        return NotebookResource::collection(
-            Note::paginate($per_page, 15)
-        );
+        $cacheKey = "notebook_paginated_notes_{$per_page}";
 
+        $this->addPaginatedKey($cacheKey);
+
+        return Cache::remember($cacheKey, 3600, function () use ($per_page) {
+            return NotebookResource::collection(
+                Note::paginate($per_page)
+            );
+        });
     }
 
     public function getNote(int $id): NotebookResource
     {
-        return new NotebookResource(
-            Note::findOrFail($id)
-        );
+        $cacheKey = "notebook_note_{$id}";
+
+        return Cache::remember($cacheKey, 3600, function () use ($id) {
+            return new NotebookResource(
+                Note::findOrFail($id)
+            );
+        });
     }
 
     public function storeNote(array $data): NotebookResource
@@ -39,9 +51,11 @@ class NotebookService implements NotebookServiceInterface
             $data['photo'] = $this->saveNotePhoto($data['photo']);
         }
 
-        return new NotebookResource(
-            Note::create($data)
-        );
+        $note = Note::create($data);
+
+        $this->clearAllCache();
+
+        return new NotebookResource($note);
     }
 
     public function updateNote(array $data, int $id): NotebookResource
@@ -56,6 +70,8 @@ class NotebookService implements NotebookServiceInterface
 
         $note->update($data);
 
+        $this->clearAllCache($id);
+
         return new NotebookResource(
             $note->fresh()
         );
@@ -69,11 +85,12 @@ class NotebookService implements NotebookServiceInterface
         }
 
         $note->delete();
+
+        $this->clearAllCache($id);
     }
 
     private function saveNotePhoto(UploadedFile $photo): false|string
     {
-
         $filename = date('Y-m-d-H-i-s') . '-' .
             Uuid::uuid4()->toString() . '.' .
             $photo->getClientOriginalExtension();
@@ -90,5 +107,33 @@ class NotebookService implements NotebookServiceInterface
         if (file_exists($fullPath)) {
             unlink($fullPath);
         }
+    }
+
+    private function clearPaginatedCache(): void
+    {
+        // Очистить все ключи пагинации
+        $keys = Cache::get('notebook_paginated_keys', []);
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
+        Cache::forget('notebook_paginated_keys');
+    }
+
+    private function addPaginatedKey(string $cacheKey): void
+    {
+        $keys = Cache::get('notebook_paginated_keys', []);
+        if (!in_array($cacheKey, $keys)) {
+            $keys[] = $cacheKey;
+            Cache::put('notebook_paginated_keys', $keys, 3600);
+        }
+    }
+
+    private function clearAllCache(?int $id = null): void
+    {
+        if ($id !== null) {
+            Cache::forget("notebook_note_{$id}");
+        }
+        Cache::forget('notebook_all_notes');
+        $this->clearPaginatedCache();
     }
 }

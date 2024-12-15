@@ -10,6 +10,7 @@
         "darkaonline/l5-swagger": "^8.6",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
+        "predis/predis": "^2.3",
         "ramsey/uuid": "^4.7"
     },
     "require-dev": {

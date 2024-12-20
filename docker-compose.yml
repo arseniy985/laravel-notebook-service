@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel_notebook_service
+    container_name: laravel_notebook_service_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    networks:
+      - laravel_notebook_service_network
+
+  db:
+    image: postgres:13
+    container_name: laravel_notebook_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notebook-api-service
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - laravel_notebook_service_network
+
+  redis:
+    image: redis:6
+    container_name: laravel_notebook_service_redis
+    restart: unless-stopped
+    networks:
+      - laravel_notebook_service_network
+
+networks:
+  laravel_notebook_service_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 interface NotebookServiceInterface
 {
     public function getAllNotes(): AnonymousResourceCollection;
-    public function getPaginatedNotes(int $per_page): AnonymousResourceCollection;
+    public function getPaginatedNotes(int $page ,int $per_page): AnonymousResourceCollection;
     public function getNote(int $id): NotebookResource;
     public function storeNote(array $data): NotebookResource;
     public function updateNote(array $data, int $id): NotebookResource;

@@ -25,9 +25,8 @@ class NotebookService implements NotebookServiceInterface
         );
     }
 
-    public function getPaginatedNotes(int $per_page): AnonymousResourceCollection
+    public function getPaginatedNotes(int $page, int $per_page): AnonymousResourceCollection
     {
-        $page = request()->get('page', 1);
         $cacheKey = sprintf(
             '%s_paginated_notes_per_%d_page_%d',
             self::CACHE_PREFIX,
